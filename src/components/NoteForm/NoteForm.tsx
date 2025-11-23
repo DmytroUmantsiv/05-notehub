@@ -29,8 +29,9 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
   const mutation = useMutation({
     mutationFn: (values: NoteFormValues) => createNote(values),
     onSuccess: () => {
-    
+      // Інвалідуємо кеш і закриваємо модалку *після* успішного створення
       queryClient.invalidateQueries({ queryKey: ['notes'] });
+      onCancel();
     },
   });
 
@@ -41,13 +42,18 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
       initialValues={initial}
       validationSchema={schema}
       onSubmit={async (values, { setSubmitting, resetForm }) => {
-        try {
-          await mutation.mutateAsync(values);
-          resetForm();
-          setSubmitting(false);
-        } catch {
-          setSubmitting(false);
-        }
+        setSubmitting(true);
+      
+        mutation.mutate(values, {
+          onSuccess: () => {
+             
+            resetForm();
+          },
+          onError: () => {
+             
+          },
+        });
+        setSubmitting(false);
       }}
     >
       {({ isSubmitting }) => (
@@ -93,7 +99,7 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
               type="button"
               className={css.cancelButton}
               onClick={onCancel}
-              disabled={isSubmitting}
+              disabled={isSubmitting || mutation.isPending}
             >
               Cancel
             </button>
