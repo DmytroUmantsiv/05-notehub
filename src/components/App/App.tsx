@@ -27,7 +27,7 @@ export default function App() {
     queryKey: ['notes', page, debouncedSearch],
     queryFn: () => fetchNotes({ page, perPage: 12, search: debouncedSearch }),
     placeholderData: queryClient.getQueryData(['notes', page - 1, debouncedSearch]),
-    staleTime: 5000,
+    staleTime: 60000,
     refetchOnWindowFocus: false,
   });
 
