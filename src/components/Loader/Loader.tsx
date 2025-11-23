@@ -1,6 +1,7 @@
-import styles from './Loader.module.css'
-
+import css from './Loader.module.css'
 
 export default function Loader() {
-return <p className={styles.text}>Loading movies, please wait...</p>
+  return (
+    <div className={css.loader}>Loading...</div>
+  )
 }
