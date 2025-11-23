@@ -1,6 +1,7 @@
 import { Formik, Form, Field, ErrorMessage as FE } from 'formik';
 import * as yup from 'yup';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
 import { createNote } from '../../services/noteService';
 import css from './NoteForm.module.css';
 
@@ -12,8 +13,8 @@ interface NoteFormValues {
 
 interface NoteFormProps {
   onCancel: () => void;
+  onSubmit: (values: NoteFormValues) => Promise<void>;  
 }
-
 const schema = yup.object({
   title: yup.string().min(3).max(50).required('Title required'),
   content: yup.string().max(500),
@@ -29,7 +30,6 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
   const mutation = useMutation({
     mutationFn: (values: NoteFormValues) => createNote(values),
     onSuccess: () => {
-      // Інвалідуємо кеш і закриваємо модалку *після* успішного створення
       queryClient.invalidateQueries({ queryKey: ['notes'] });
       onCancel();
     },
@@ -41,20 +41,15 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
     <Formik
       initialValues={initial}
       validationSchema={schema}
-      onSubmit={async (values, { setSubmitting, resetForm }) => {
-        setSubmitting(true);
-      
-        mutation.mutate(values, {
-          onSuccess: () => {
-             
-            resetForm();
-          },
-          onError: () => {
-             
-          },
-        });
-        setSubmitting(false);
-      }}
+      onSubmit={async (values, { resetForm }) => {
+  try {
+    await mutation.mutateAsync(values);  
+    resetForm();                          
+  } catch (error) {
+    console.error('Failed to create note:', error); 
+    toast.error('Failed to create note');
+  }
+}}
     >
       {({ isSubmitting }) => (
         <Form className={css.form}>

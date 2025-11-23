@@ -5,9 +5,10 @@ import { deleteNote } from '../../services/noteService';
 
 interface NoteListProps {
   notes: Note[];
+  onDelete: (id: string) => Promise<void>;  
 }
 
-export default function NoteList({ notes }: NoteListProps) {
+export default function NoteList({ notes, onDelete }: NoteListProps) {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -29,8 +30,11 @@ export default function NoteList({ notes }: NoteListProps) {
             <span className={css.tag}>{n.tag}</span>
             <button
               className={css.button}
-              onClick={() => mutation.mutate(n.id)}
-              disabled={mutation.isPending}
+              onClick={() => {
+                mutation.mutate(n.id);
+                onDelete(n.id);  
+              }}
+              disabled={mutation.status === 'pending'}
             >
               Delete
             </button>

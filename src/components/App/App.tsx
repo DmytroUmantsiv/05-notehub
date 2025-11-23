@@ -93,7 +93,6 @@ export default function App() {
         {(isLoading || isFetching) && <Loader />}
         {isError && <ErrorMessage />}
 
-        {/* @ts-ignore: NoteList prop 'onDelete' is intentionally passed even though it's not declared in NoteListProps */}
         <NoteList notes={notes} onDelete={handleDelete} />
 
         {totalPages > 1 && (
@@ -102,7 +101,6 @@ export default function App() {
 
         {modalOpen && (
           <Modal onClose={() => setModalOpen(false)}>
-            {/* @ts-ignore: NoteForm prop 'onSubmit' is intentionally passed even though it's not declared in NoteFormProps */}
             <NoteForm onSubmit={handleCreate} onCancel={() => setModalOpen(false)} />
           </Modal>
         )}
