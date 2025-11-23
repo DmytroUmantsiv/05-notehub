@@ -11,7 +11,7 @@ const root = document.getElementById('modal-root') || document.body;
 
 export default function Modal({ children, onClose }: ModalProps) {
   useEffect(() => {
-    // Відключаємо прокрутку сторінки
+    
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
@@ -23,7 +23,7 @@ export default function Modal({ children, onClose }: ModalProps) {
 
     return () => {
       document.removeEventListener('keydown', onKey);
-      // Відновлюємо прокрутку сторінки
+      
       document.body.style.overflow = originalOverflow;
     };
   }, [onClose]);

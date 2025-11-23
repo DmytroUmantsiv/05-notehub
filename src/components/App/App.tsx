@@ -22,7 +22,7 @@ export default function App() {
 
   const queryClient = useQueryClient();
 
-  // Fetch notes з правильними опціями
+  
   const { data, isLoading, isFetching, isError, isSuccess } = useQuery<FetchNotesResponse, Error>({
     queryKey: ['notes', page, debouncedSearch],
     queryFn: () => fetchNotes({ page, perPage: 12, search: debouncedSearch }),
@@ -35,14 +35,14 @@ export default function App() {
   const totalPages = data?.totalPages ?? 1;
 
   useEffect(() => {
-  // "Updating..." тост
+
   if (isFetching && notes.length > 0) {
     toast.loading('Updating...', { id: 'fetch' });
   } else {
     toast.dismiss('fetch');
   }
 
-  // "No notes found" тост
+ 
   if (isSuccess && notes.length === 0 && debouncedSearch) {
     toast('No notes found for your request.');
   }

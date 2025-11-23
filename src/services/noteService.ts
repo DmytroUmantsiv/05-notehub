@@ -13,9 +13,7 @@ export interface FetchNotesResponse {
   totalPages: number;
 }
 
-// ------------------------------
-// Fetch notes
-// ------------------------------
+ 
 export async function fetchNotes({
   page = 1,
   perPage = 12,
@@ -33,10 +31,7 @@ export async function fetchNotes({
 
   return resp.data;
 }
-
-// ------------------------------
-// Create note
-// ------------------------------
+ 
 export async function createNote(payload: {
   title: string;
   content?: string;
@@ -50,9 +45,7 @@ export async function createNote(payload: {
   return resp.data;
 }
 
-// ------------------------------
-// Delete note
-// ------------------------------
+ 
 export async function deleteNote(id: string): Promise<Note> {
   const resp: AxiosResponse<Note> = await api.delete(`/notes/${id}`, {
     headers: {

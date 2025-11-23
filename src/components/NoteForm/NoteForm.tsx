@@ -29,7 +29,7 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
   const mutation = useMutation({
     mutationFn: (values: NoteFormValues) => createNote(values),
     onSuccess: () => {
-      // Оновлюємо кеш нотаток після створення
+    
       queryClient.invalidateQueries({ queryKey: ['notes'] });
     },
   });
