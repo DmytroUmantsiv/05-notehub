@@ -9,10 +9,9 @@ import Pagination from '../Pagination/Pagination';
 import Loader from '../Loader/Loader';
 import ErrorMessage from '../ErrorMessage/ErrorMessage';
 import type { FetchNotesResponse } from '../../services/noteService';
-
 import { fetchNotes, createNote, deleteNote } from '../../services/noteService';
 import { useDebounce } from 'use-debounce';
-import './App.module.css';
+import css from './App.module.css';
 
 export default function App() {
   const [page, setPage] = useState(1);
@@ -20,35 +19,20 @@ export default function App() {
   const [modalOpen, setModalOpen] = useState(false);
 
   const [debouncedSearch] = useDebounce(search, 500);
+
   const queryClient = useQueryClient();
 
-  // -------------------------------
-  // Fetch notes
-  // -------------------------------
-  const {
-    data,
-    error,
-    isLoading,
-    isFetching,
-    isSuccess,
-  } = useQuery<FetchNotesResponse, Error>({
+  const { data, error, isLoading, isFetching, isSuccess } = useQuery<FetchNotesResponse, Error>({
     queryKey: ['notes', page, debouncedSearch],
-    queryFn: () =>
-      fetchNotes({
-        page,
-        perPage: 12,
-        search: debouncedSearch,
-      }),
+    queryFn: () => fetchNotes({ page, perPage: 12, search: debouncedSearch }),
     staleTime: 0,
     refetchOnWindowFocus: false,
   });
-
+  
   const notes = data?.data ?? [];
   const totalPages = data?.total ?? 1;
 
-  // -------------------------------
-  // Toasts
-  // -------------------------------
+ 
   useEffect(() => {
     if (isFetching && notes.length > 0) {
       toast.loading('Updating...', { id: 'fetch' });
@@ -56,49 +40,46 @@ export default function App() {
       toast.dismiss('fetch');
     }
 
-    if (isSuccess && notes.length === 0) {
+    if (isSuccess && notes.length === 0 && debouncedSearch) {
       toast('No notes found for your request.');
     }
-  }, [isFetching, isSuccess, notes.length]);
+  }, [isFetching, isSuccess, notes.length, debouncedSearch]);
 
-  // -------------------------------
-  // Create note
-  // -------------------------------
- async function handleCreate(values: { title: string; content?: string; tag: string }) {
-  try {
-    await createNote(values);
-    toast.success('Note created!');
-    setModalOpen(false);
-    setPage(1);
+  async function handleCreate(values: { title: string; content?: string; tag: string }) {
+    try {
+      await createNote(values);
+      setModalOpen(false);
+      setPage(1);
 
-    // Інвалідовуємо всі запити notes, щоб TanStack Query заново отримав дані
-    queryClient.invalidateQueries({ queryKey: ['notes'] })
-  } catch (err) {
-    toast.error('Failed to create note');
+      await queryClient.invalidateQueries({ queryKey: ['notes'], exact: false });
+
+      toast.success('Note created!');
+    } catch (err) {
+      console.error('Create note error:', err);
+      toast.error('Failed to create note');
+    }
   }
-}
 
-
-  // -------------------------------
-  // Delete note
-  // -------------------------------
   async function handleDelete(id: string) {
     try {
       await deleteNote(id);
-      toast.success('Note deleted!');
+
       await queryClient.invalidateQueries({ queryKey: ['notes'], exact: false });
+
+      toast.success('Note deleted!');
     } catch (err) {
+      console.error('Delete note error:', err);
       toast.error('Failed to delete note');
     }
   }
 
   return (
-    <div className="app">
+    <div className={css.app}>
       <Toaster position="top-center" />
 
-      <header className="toolbar">
+      <header className={css.toolbar}>
         <SearchBox value={search} onChange={setSearch} />
-        <button className="button" onClick={() => setModalOpen(true)}>
+        <button className={css.button} onClick={() => setModalOpen(true)}>
           Create note +
         </button>
       </header>

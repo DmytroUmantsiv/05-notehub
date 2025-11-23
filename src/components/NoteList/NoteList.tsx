@@ -12,7 +12,9 @@ export default function NoteList({ notes, onDelete }: NoteListProps) {
 if (!notes || notes.length === 0) return null
 
 
+
 return (
+    
 <ul className={css.list}>
 {notes.map(n => (
 <li key={n._id} className={css.listItem}>
