@@ -22,56 +22,59 @@ export default function App() {
 
   const queryClient = useQueryClient();
 
-  const { data, error, isLoading, isFetching, isSuccess } = useQuery<FetchNotesResponse, Error>({
+  // Fetch notes з правильними опціями
+  const { data, isLoading, isFetching, isError, isSuccess } = useQuery<FetchNotesResponse, Error>({
     queryKey: ['notes', page, debouncedSearch],
     queryFn: () => fetchNotes({ page, perPage: 12, search: debouncedSearch }),
-    staleTime: 0,
+    placeholderData: queryClient.getQueryData(['notes', page - 1, debouncedSearch]),
+    staleTime: 5000,
     refetchOnWindowFocus: false,
   });
-  
-  const notes = data?.data ?? [];
-  const totalPages = data?.total ?? 1;
 
- 
+  const notes = data?.notes ?? [];
+  const totalPages = data?.totalPages ?? 1;
+
   useEffect(() => {
-    if (isFetching && notes.length > 0) {
-      toast.loading('Updating...', { id: 'fetch' });
-    } else {
-      toast.dismiss('fetch');
-    }
+  // "Updating..." тост
+  if (isFetching && notes.length > 0) {
+    toast.loading('Updating...', { id: 'fetch' });
+  } else {
+    toast.dismiss('fetch');
+  }
 
-    if (isSuccess && notes.length === 0 && debouncedSearch) {
-      toast('No notes found for your request.');
-    }
-  }, [isFetching, isSuccess, notes.length, debouncedSearch]);
+  // "No notes found" тост
+  if (isSuccess && notes.length === 0 && debouncedSearch) {
+    toast('No notes found for your request.');
+  }
+}, [isFetching, isSuccess, notes.length, debouncedSearch]);
 
-  async function handleCreate(values: { title: string; content?: string; tag: string }) {
+
+
+  const handleCreate = async (values: { title: string; content?: string; tag: string }) => {
     try {
       await createNote(values);
+      toast.success('Note created!');
       setModalOpen(false);
       setPage(1);
-
       await queryClient.invalidateQueries({ queryKey: ['notes'], exact: false });
-
-      toast.success('Note created!');
     } catch (err) {
-      console.error('Create note error:', err);
+      console.error(err);
       toast.error('Failed to create note');
     }
-  }
+  };
 
-  async function handleDelete(id: string) {
+  const handleDelete = async (id: string) => {
     try {
       await deleteNote(id);
-
-      await queryClient.invalidateQueries({ queryKey: ['notes'], exact: false });
-
       toast.success('Note deleted!');
+      await queryClient.invalidateQueries({ queryKey: ['notes'], exact: false });
     } catch (err) {
-      console.error('Delete note error:', err);
+      console.error(err);
       toast.error('Failed to delete note');
     }
-  }
+  };
+
+  const noteListProps: any = { notes, onDelete: handleDelete };
 
   return (
     <div className={css.app}>
@@ -85,10 +88,10 @@ export default function App() {
       </header>
 
       <main>
-        {isLoading && <Loader />}
-        {error && <ErrorMessage />}
+        {(isLoading || isFetching) && <Loader />}
+        {isError && <ErrorMessage />}
 
-        {notes.length > 0 && <NoteList notes={notes} onDelete={handleDelete} />}
+        <NoteList {...noteListProps} />
 
         {totalPages > 1 && (
           <Pagination pageCount={totalPages} currentPage={page} onPageChange={setPage} />
@@ -96,7 +99,7 @@ export default function App() {
 
         {modalOpen && (
           <Modal onClose={() => setModalOpen(false)}>
-            <NoteForm onSubmit={handleCreate} onCancel={() => setModalOpen(false)} />
+            <NoteForm {...({ onSubmit: handleCreate, onCancel: () => setModalOpen(false) } as any)} />
           </Modal>
         )}
       </main>
