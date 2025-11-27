@@ -9,7 +9,7 @@ import Pagination from '../Pagination/Pagination';
 import Loader from '../Loader/Loader';
 import ErrorMessage from '../ErrorMessage/ErrorMessage';
 import type { FetchNotesResponse } from '../../services/noteService';
-import { fetchNotes, createNote, deleteNote } from '../../services/noteService';
+import { fetchNotes} from '../../services/noteService';
 import { useDebounce } from 'use-debounce';
 import css from './App.module.css';
 
@@ -54,30 +54,6 @@ export default function App() {
     }
   }, [isFetching, isSuccess, notes.length, debouncedSearch]);
 
- 
-  const handleCreate = async (values: { title: string; content?: string; tag: string }) => {
-    try {
-      await createNote(values);
-      toast.success('Note created!');
-      setModalOpen(false);
-      setPage(1);
-      await queryClient.invalidateQueries({ queryKey: ['notes'], exact: false });
-    } catch {
-      toast.error('Failed to create note');
-    }
-  };
-
- 
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteNote(id);
-      toast.success('Note deleted!');
-      await queryClient.invalidateQueries({ queryKey: ['notes'], exact: false });
-    } catch {
-      toast.error('Failed to delete note');
-    }
-  };
-
   return (
     <div className={css.app}>
       <Toaster position="top-center" />
@@ -93,7 +69,7 @@ export default function App() {
         {(isLoading || isFetching) && <Loader />}
         {isError && <ErrorMessage />}
 
-        <NoteList notes={notes} onDelete={handleDelete} />
+        <NoteList notes={notes}/>
 
         {totalPages > 1 && (
           <Pagination pageCount={totalPages} currentPage={page} onPageChange={setPage} />
@@ -101,7 +77,7 @@ export default function App() {
 
         {modalOpen && (
           <Modal onClose={() => setModalOpen(false)}>
-            <NoteForm onSubmit={handleCreate} onCancel={() => setModalOpen(false)} />
+            <NoteForm onCancel={() => setModalOpen(false)} />
           </Modal>
         )}
       </main>

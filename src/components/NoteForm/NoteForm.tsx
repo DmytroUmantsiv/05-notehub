@@ -1,8 +1,8 @@
 import { Formik, Form, Field, ErrorMessage as FE } from 'formik';
 import * as yup from 'yup';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'react-hot-toast';
 import { createNote } from '../../services/noteService';
+import { toast } from 'react-hot-toast';
 import css from './NoteForm.module.css';
 
 interface NoteFormValues {
@@ -13,8 +13,8 @@ interface NoteFormValues {
 
 interface NoteFormProps {
   onCancel: () => void;
-  onSubmit: (values: NoteFormValues) => Promise<void>;  
 }
+
 const schema = yup.object({
   title: yup.string().min(3).max(50).required('Title required'),
   content: yup.string().max(500),
@@ -31,7 +31,12 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
     mutationFn: (values: NoteFormValues) => createNote(values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
-      onCancel();
+      onCancel(); // закриваємо модалку після успіху
+      toast.success('Note created!');
+    },
+    onError: (err) => {
+      console.error('Create note error:', err);
+      toast.error('Failed to create note');
     },
   });
 
@@ -42,16 +47,15 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
       initialValues={initial}
       validationSchema={schema}
       onSubmit={async (values, { resetForm }) => {
-  try {
-    await mutation.mutateAsync(values);  
-    resetForm();                          
-  } catch (error) {
-    console.error('Failed to create note:', error); 
-    toast.error('Failed to create note');
-  }
-}}
+        try {
+          await mutation.mutateAsync(values);
+          resetForm();
+        } catch {
+          // обробка помилки вже в onError мутації
+        }
+      }}
     >
-      {({ isSubmitting }) => (
+      {() => (
         <Form className={css.form}>
           <div className={css.formGroup}>
             <label htmlFor="title">Title</label>
@@ -63,13 +67,7 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
 
           <div className={css.formGroup}>
             <label htmlFor="content">Content</label>
-            <Field
-              id="content"
-              name="content"
-              as="textarea"
-              rows={6}
-              className={css.textarea}
-            />
+            <Field id="content" name="content" as="textarea" rows={6} className={css.textarea} />
             <span className={css.error}>
               <FE name="content" />
             </span>
@@ -94,14 +92,14 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
               type="button"
               className={css.cancelButton}
               onClick={onCancel}
-              disabled={isSubmitting || mutation.isPending}
+              disabled={mutation.isPending}
             >
               Cancel
             </button>
             <button
               type="submit"
               className={css.submitButton}
-              disabled={isSubmitting || mutation.isPending}
+              disabled={mutation.isPending}
             >
               Create note
             </button>
